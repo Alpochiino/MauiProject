@@ -1,4 +1,4 @@
-﻿namespace MauiProject.Parser;
+﻿namespace MauiProject.Converters;
 using System;
 using System.Globalization;
 

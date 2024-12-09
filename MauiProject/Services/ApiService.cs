@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Globalization;
+using MauiProject.Models.Forecasts;
 
 public class ApiService
 {
@@ -116,4 +117,30 @@ public class ApiService
         return forecastList;
     }
 
+    public List<HourlyForecastGroup> GroupWeatherData(List<WeatherData> dailyForecasts)
+    {
+        try
+        {
+            var groupedData = dailyForecasts
+                .GroupBy(w => w.RawDate.DayOfWeek)
+                .OrderBy(g => g.Key)
+                .Select(g => new HourlyForecastGroup(
+                    g.Key.ToString(),
+                    g.Select(weatherData => new HourlyForecast
+                    {
+                        Hour = weatherData.RawDate.ToString("HH:mm"),
+                        Temperature = weatherData.Temperature,
+                        WeatherCondition = weatherData.WeatherCondition,
+                        Date = weatherData.RawDate
+                    }).ToList()))
+                .ToList();
+
+            return groupedData;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error grouping weather data: {ex.Message}");
+            return new List<HourlyForecastGroup>();
+        }
+    }
 }

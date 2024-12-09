@@ -88,41 +88,12 @@ public class WeatherViewModel : ViewModelBase
         WeatherData = await _apiService.GetWeatherDataAsync(cityName);
         DailyForecasts = await _apiService.GetDailyForecastAsync(cityName);
 
-        GroupWeatherData();
+        GroupedDailyForecasts = new ObservableCollection<HourlyForecastGroup>(
+            _apiService.GroupWeatherData(DailyForecasts)
+        );
+
+        OnPropertyChanged(nameof(GroupedDailyForecasts));
     }
 
     public ObservableCollection<HourlyForecastGroup> GroupedDailyForecasts { get; set; } = new ObservableCollection<HourlyForecastGroup>();
-
-    private void GroupWeatherData()
-    {
-        try
-        {
-            var groupedData = DailyForecasts
-                .GroupBy(w => w.RawDate.DayOfWeek)
-                .OrderBy(g => g.Key)
-                .Select(g => new HourlyForecastGroup(
-                    g.Key.ToString(),
-                    g.Select(weatherData => new HourlyForecast
-                    {
-                        Hour = weatherData.RawDate.ToString("HH:mm"),
-                        Temperature = weatherData.Temperature,
-                        WeatherCondition = weatherData.WeatherCondition,
-                        Date = weatherData.RawDate
-                    }).ToList()))
-                .ToList();
-
-            GroupedDailyForecasts.Clear();
-            foreach (var group in groupedData)
-            {
-                GroupedDailyForecasts.Add(group);
-            }
-
-            OnPropertyChanged(nameof(GroupedDailyForecasts));
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error grouping weather data: {ex.Message}");
-        }
-    }
-
 }

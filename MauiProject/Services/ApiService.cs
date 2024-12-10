@@ -171,27 +171,21 @@ public class ApiService
 
 		try
 		{
-			// Format latitude and longitude
 			var latitude = location.Latitude.ToString("F6", CultureInfo.InvariantCulture);
 			var longitude = location.Longitude.ToString("F6", CultureInfo.InvariantCulture);
 			var query = Uri.EscapeDataString($"{latitude},{longitude}");
 
-			// Construct the URL
 			var url = $"https://api.positionstack.com/v1/reverse?access_key=96ca26a1377f94f0b3dcd2cbd00dbf60&query={query}";
 			Console.WriteLine($"Request URL: {url}");
 
-			// Make the HTTP request
 			var response = await _httpClient.GetStringAsync(url);
 			var data = JsonConvert.DeserializeObject<dynamic>(response);
-
-			// Validate response data
 			if (data?.data == null || data.data.Count == 0)
 			{
 				Console.WriteLine("No data found in API response.");
 				return null;
 			}
 
-			// Extract city and country information
 			var city = (string)data.data[0]?.locality;
 			var country = (string)data.data[0]?.country;
 

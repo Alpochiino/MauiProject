@@ -35,7 +35,7 @@
                     VerticalOptions="Start"
                     Margin="0,0,0,20"/>
 
-            <StackLayout IsVisible="{Binding SelectedCity}">
+            <StackLayout IsVisible="{Binding SelectedCity, Converter={StaticResource NullToBooleanConverter}}">
                 <Frame BackgroundColor="LightSkyBlue"
                        CornerRadius="20"
                        Padding="20"
@@ -68,34 +68,37 @@
                     </StackLayout>
                 </Frame>
 
-                <Label Text="DAILY FORECAST"
-                       FontSize="12"
-                       FontAttributes="Bold"
-                       HorizontalOptions="Start"
-                       Margin="0,20,0,0"/>
-
-                <CollectionView ItemsSource="{Binding GroupedDailyForecasts}" ItemsLayout="VerticalList" HorizontalOptions="FillAndExpand" VerticalOptions="Start">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <StackLayout Spacing="5" Padding="5">
-                                <Label Text="{Binding Key}" FontSize="11" FontAttributes="Bold" HorizontalOptions="Start" Margin="0,5" />                                
-                                <CollectionView ItemsSource="{Binding Items}" ItemsLayout="HorizontalList" HorizontalScrollBarVisibility="Never" VerticalOptions="Start" HeightRequest="100">
-                                    <CollectionView.ItemTemplate>
-                                        <DataTemplate>
-                                            <Frame BackgroundColor="White" Padding="8" Margin="2" CornerRadius="10" HeightRequest="80" WidthRequest="80">
-                                                <StackLayout Spacing="3">
-                                                    <Label Text="{Binding Hour}" FontSize="12" HorizontalOptions="Center" />
-                                                    <Label Text="{Binding Temperature, StringFormat='{0}°C'}" FontSize="14" HorizontalOptions="Center" />
-                                                    <Label Text="{Binding WeatherCondition}" FontSize="12" HorizontalOptions="Center" />
-                                                </StackLayout>
-                                            </Frame>
-                                        </DataTemplate>
-                                    </CollectionView.ItemTemplate>
-                                </CollectionView>
-                            </StackLayout>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                <StackLayout IsVisible="{Binding SelectedCity, Converter={StaticResource NullToBooleanConverter}}">
+                    <Grid HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Label Grid.Row="0" Text="DAILY FORECAST" FontSize="12" FontAttributes="Bold" HorizontalOptions="Start" Margin="0,20,0,0" />
+                        <CollectionView Grid.Row="1" ItemsSource="{Binding GroupedDailyForecasts}" ItemsLayout="VerticalList" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" MinimumWidthRequest="200" Margin="10">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackLayout Spacing="5" Padding="5" HorizontalOptions="FillAndExpand">
+                                        <Label Text="{Binding Key}" FontSize="11" FontAttributes="Bold" HorizontalOptions="Start" Margin="0,5,0,0" />
+                                        <CollectionView ItemsSource="{Binding Items}" ItemsLayout="HorizontalList" HorizontalScrollBarVisibility="Never" HorizontalOptions="FillAndExpand" VerticalOptions="CenterAndExpand" HeightRequest="100">
+                                            <CollectionView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Frame BackgroundColor="White" Padding="8" Margin="2" CornerRadius="10" HeightRequest="90" WidthRequest="100">
+                                                        <StackLayout Spacing="3">
+                                                            <Label Text="{Binding Hour}" FontSize="12" HorizontalOptions="Center" TextColor="Black" />
+                                                            <Label Text="{Binding Temperature, StringFormat='{0}°C'}" FontSize="14" HorizontalOptions="Center" TextColor="Black" />
+                                                            <Label Text="{Binding WeatherCondition}" FontSize="12" HorizontalOptions="Center" TextColor="Black" HorizontalTextAlignment="Center" />
+                                                        </StackLayout>
+                                                    </Frame>
+                                                </DataTemplate>
+                                            </CollectionView.ItemTemplate>
+                                        </CollectionView>
+                                    </StackLayout>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Grid>
+                </StackLayout>
             </StackLayout>
         </StackLayout>
     </ScrollView>

@@ -36,35 +36,13 @@
                     Margin="0,0,0,20"/>
 
             <StackLayout IsVisible="{Binding SelectedCity, Converter={StaticResource NullToBooleanConverter}}">
-                <Frame BackgroundColor="LightSkyBlue"
-                       CornerRadius="20"
-                       Padding="20"
-                       Margin="0,20,0,0"
-                       HasShadow="True">
+                <Frame BackgroundColor="LightSkyBlue" CornerRadius="20" Padding="20" Margin="0,20,0,0" HasShadow="True">
                     <StackLayout>
-                        <Label Text="Today"
-                               FontSize="22"
-                               FontAttributes="Bold"
-                               HorizontalOptions="Center"
-                               TextColor="White"/>
-                        <Image Source="{Binding WeatherData.IconUrl}"
-                               WidthRequest="80"
-                               HeightRequest="80"
-                               HorizontalOptions="Center"
-                               Aspect="AspectFit" />
-                        <Label Text="{Binding WeatherData.Temperature, StringFormat='{0}°C'}"
-                               FontSize="60"
-                               FontAttributes="Bold"
-                               HorizontalOptions="Center"
-                               TextColor="White"/>
-                        <Label Text="{Binding WeatherData.WeatherCondition}"
-                               FontSize="20"
-                               HorizontalOptions="Center"
-                               TextColor="White"/>
-                        <Label Text="{Binding WeatherData.WindSpeed, StringFormat='Wind: {0} km/h'}"
-                               FontSize="18"
-                               HorizontalOptions="Center"
-                               TextColor="White"/>
+                        <Label Text="Today" FontSize="22" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White"/>
+                        <Image Source="{Binding WeatherData.IconUrl}" WidthRequest="80" HeightRequest="80" HorizontalOptions="Center" Aspect="AspectFit" />
+                        <Label Text="{Binding WeatherData.Temperature, StringFormat='{0}°C'}" FontSize="60" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White"/>
+                        <Label Text="{Binding WeatherData.WeatherCondition}" FontSize="20" HorizontalOptions="Center" TextColor="White"/>
+                        <Label Text="{Binding WeatherData.WindSpeed, StringFormat='Wind: {0} km/h'}" FontSize="18" HorizontalOptions="Center" TextColor="White"/>
                     </StackLayout>
                 </Frame>
 

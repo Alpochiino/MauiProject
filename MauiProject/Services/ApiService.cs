@@ -50,7 +50,8 @@ public class ApiService
 				cities.Add(new City
 				{
 					Name = city.name,
-					Country = city.countryName
+					Country = city.countryName,
+					CountryCode= countryCode,
 				});
 			}
 		}
@@ -119,33 +120,6 @@ public class ApiService
 
 		return forecastList;
 	}
-
-	public List<HourlyForecastGroup> GroupWeatherData(List<WeatherData> dailyForecasts)
-	{
-		try
-		{
-			var groupedData = dailyForecasts
-				.GroupBy(w => w.RawDate.DayOfWeek)
-				.OrderBy(g => (int)g.Key == 0 ? 7 : (int)g.Key)
-				.Select(g => new HourlyForecastGroup(
-					g.Key.ToString(),
-					g.Select(weatherData => new HourlyForecast
-					{
-						Hour = weatherData.RawDate.ToString("HH:mm"),
-						Temperature = weatherData.Temperature,
-						WeatherCondition = weatherData.WeatherCondition,
-						Date = weatherData.RawDate
-					}).ToList()))
-				.ToList();
-
-			return groupedData;
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Error grouping weather data: {ex.Message}");
-			return new List<HourlyForecastGroup>();
-		}
-	}
 	
 	public async Task<Location> GetCurrentLocationAsync()
 	{
@@ -173,29 +147,32 @@ public class ApiService
 		{
 			var latitude = location.Latitude.ToString("F6", CultureInfo.InvariantCulture);
 			var longitude = location.Longitude.ToString("F6", CultureInfo.InvariantCulture);
-			var query = Uri.EscapeDataString($"{latitude},{longitude}");
 
-			var url = $"https://api.positionstack.com/v1/reverse?access_key=96ca26a1377f94f0b3dcd2cbd00dbf60&query={query}";
+			// LocationIQ Reverse Geocoding API
+			var url = $"https://us1.locationiq.com/v1/reverse.php?key=pk.542b0e16be8de286956311ce5e738f5a&lat={latitude}&lon={longitude}&format=json";
+
 			Console.WriteLine($"Request URL: {url}");
 
 			var response = await _httpClient.GetStringAsync(url);
 			var data = JsonConvert.DeserializeObject<dynamic>(response);
-			if (data?.data == null || data.data.Count == 0)
+
+			if (data?.address == null)
 			{
 				Console.WriteLine("No data found in API response.");
 				return null;
 			}
 
-			var city = (string)data.data[0]?.locality;
-			var country = (string)data.data[0]?.country;
-
+			var city = (string)data.address.city ?? (string)data.address.town ?? (string)data.address.village;
+			var country = (string)data.address.country;
+			var countryCode = (string)data.address.country_code;
+			
 			if (string.IsNullOrEmpty(city) || string.IsNullOrEmpty(country))
 			{
 				Console.WriteLine("City or country data is missing.");
 				return null;
 			}
 
-			return new City { Name = city, Country = country };
+			return new City { Name = city, Country = country, CountryCode = countryCode?.ToUpperInvariant() };
 		}
 		catch (HttpRequestException httpEx)
 		{

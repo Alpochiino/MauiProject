@@ -101,7 +101,8 @@ public class WeatherViewModel : ViewModelBase
 
 	private async Task LoadCitiesAsync(string countryCode)
 	{
-		Cities = await _apiService.GetCitiesByCountryAsync(countryCode);
+		var fetchedCities = await _apiService.GetCitiesByCountryAsync(countryCode);
+		Cities = fetchedCities;	
 	}
 
 	private async Task LoadWeatherDataAsync(string cityName)
@@ -113,8 +114,36 @@ public class WeatherViewModel : ViewModelBase
 
 		var dailyForecasts = await _apiService.GetDailyForecastAsync(cityName);
 		GroupedDailyForecasts = new ObservableCollection<HourlyForecastGroup>(
-			_apiService.GroupWeatherData(dailyForecasts)
+			GroupWeatherData(dailyForecasts)
 		);
+	}
+	
+	public List<HourlyForecastGroup> GroupWeatherData(List<WeatherData> dailyForecasts)
+	{
+		try
+		{
+			var today = (int)DateTime.Now.DayOfWeek;
+			var groupedData = dailyForecasts
+				.GroupBy(w => w.RawDate.DayOfWeek)
+				.OrderBy(g => (int)g.Key >= today ? (int)g.Key - today : (int)g.Key + 7 - today)
+				.Select(g => new HourlyForecastGroup(
+					g.Key.ToString(),
+					g.Select(weatherData => new HourlyForecast
+					{
+						Hour = weatherData.RawDate.ToString("HH:mm"),
+						Temperature = weatherData.Temperature,
+						WeatherCondition = weatherData.WeatherCondition,
+						Date = weatherData.RawDate
+					}).ToList()))
+				.ToList();
+
+			return groupedData;
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Error grouping weather data: {ex.Message}");
+			return new List<HourlyForecastGroup>();
+		}
 	}
 
 	internal async Task InitializeWeatherForCurrentLocationAsync()
@@ -135,7 +164,7 @@ public class WeatherViewModel : ViewModelBase
 				return;
 			}
 
-			var country = Countries.FirstOrDefault(c => c.Name == city.Country);
+			var country = Countries.FirstOrDefault(c => c.Code == city.CountryCode);
 			if (country != null)
 			{
 				SelectedCountry = country;
@@ -143,9 +172,11 @@ public class WeatherViewModel : ViewModelBase
 			}
 			
 			await Task.Delay(100);
-			if (city != null)
+
+			if (Cities.Any(c => c.Name == city.Name))
 			{
-				SelectedCity = city;
+				SelectedCity = Cities.First(c => c.Name == city.Name);
+				await LoadWeatherDataAsync(SelectedCity.Name);
 			}
 			await LoadWeatherDataAsync(city.Name);
 		}

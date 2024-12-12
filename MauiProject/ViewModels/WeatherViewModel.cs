@@ -1,188 +1,175 @@
 ﻿namespace MauiProject.ViewModels;
-
+using CommunityToolkit.Mvvm.ComponentModel;
 using MauiProject.Models.Forecasts;
 using MauiProject.Models.Location;
 using MauiProject.Models.Weather;
 using MauiProject.Services;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
-public class WeatherViewModel : ViewModelBase
+public partial class WeatherViewModel : BaseViewModel
 {
-	private readonly ApiService _apiService;
+    private readonly ApiService _apiService;
 
-	private List<Country> _countries;
-	public List<Country> Countries
-	{
-		get => _countries;
-		set => SetProperty(ref _countries, value);
-	}
+    [ObservableProperty]
+    private List<Country> countries = new List<Country>();
+    [ObservableProperty]
+    private List<City> cities = new List<City>();
+    [ObservableProperty]
+    private ObservableCollection<HourlyForecastGroup> groupedDailyForecasts = new ObservableCollection<HourlyForecastGroup>();
+    [ObservableProperty]
+    private WeatherData? weatherData;
+    [ObservableProperty]
+    private string? temperature;
+    [ObservableProperty]
+    private string? currentCondition;
+    [ObservableProperty]
+    private string? weatherIconUrl;
+    [ObservableProperty]
+    private City? selectedCity;
+    [ObservableProperty]
+    private Country? selectedCountry;
 
-	private List<City> _cities;
-	public List<City> Cities
-	{
-		get => _cities;
-		set => SetProperty(ref _cities, value);
-	}
+    public WeatherViewModel(ApiService apiService)
+    {
+        _apiService = apiService;
+        InitializeViewModelAsync();
+    }
 
-	private ObservableCollection<HourlyForecastGroup> _groupedDailyForecasts = new();
-	public ObservableCollection<HourlyForecastGroup> GroupedDailyForecasts
-	{
-		get => _groupedDailyForecasts;
-		set => SetProperty(ref _groupedDailyForecasts, value);
-	}
+    public async Task InitializeViewModelAsync()
+    {
+        await LoadCountriesAsync();
+        await InitializeWeatherForCurrentLocationAsync();
+    }
 
-	private WeatherData _weatherData;
-	public WeatherData WeatherData
-	{
-		get => _weatherData;
-		set => SetProperty(ref _weatherData, value);
-	}
+    partial void OnSelectedCountryChanged(Country value)
+    {
+        if (value != null)
+        {
+            LoadCitiesAsync(value.Code);
+        }
+    }
 
-	private string _temperature;
-	public string Temperature
-	{
-		get => _temperature;
-		set => SetProperty(ref _temperature, value);
-	}
+    partial void OnSelectedCityChanged(City value)
+    {
+        if (value != null)
+        {
+            LoadWeatherDataAsync(value.Name);
+        }
+    }
 
-	private string _currentCondition;
-	public string CurrentCondition
-	{
-		get => _currentCondition;
-		set => SetProperty(ref _currentCondition, value);
-	}
+    private async Task LoadCountriesAsync()
+    {
+        try
+        {
+            var fetchedCountries = await _apiService.GetCountriesAsync();
+            Countries = fetchedCountries;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading countries: {ex.Message}");
+        }
+    }
 
-	private string _weatherIconUrl;
-	public string WeatherIconUrl
-	{
-		get => _weatherIconUrl;
-		set => SetProperty(ref _weatherIconUrl, value);
-	}
+    private async Task LoadCitiesAsync(string countryCode)
+    {
+        try
+        {
+            var fetchedCities = await _apiService.GetCitiesByCountryAsync(countryCode);
+            Cities = fetchedCities;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading cities: {ex.Message}");
+        }
+    }
 
-	private City _selectedCity;
-	public City SelectedCity
-	{
-		get => _selectedCity;
-		set
-		{
-			if (SetProperty(ref _selectedCity, value))
-			{
-				LoadWeatherDataAsync(value.Name);
-			}
-		}
-	}
+    private async Task LoadWeatherDataAsync(string cityName)
+    {
+        try
+        {
+            WeatherData = await _apiService.GetWeatherDataAsync(cityName);
+            Temperature = $"{WeatherData.Temperature}°C";
+            CurrentCondition = WeatherData.WeatherCondition;
+            WeatherIconUrl = WeatherData.IconUrl;
 
-	private Country _selectedCountry;
-	public Country SelectedCountry
-	{
-		get => _selectedCountry;
-		set
-		{
-			if (SetProperty(ref _selectedCountry, value))
-			{
-				LoadCitiesAsync(value.Code);
-			}
-		}
-	}
+            var dailyForecasts = await _apiService.GetDailyForecastAsync(cityName);
+            GroupedDailyForecasts = new ObservableCollection<HourlyForecastGroup>(
+                GroupWeatherData(dailyForecasts)
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading weather data: {ex.Message}");
+        }
+    }
 
-	public WeatherViewModel()
-	{
-		_apiService = new ApiService();
-		LoadCountriesAsync();
-		InitializeWeatherForCurrentLocationAsync();
-	}
+    public List<HourlyForecastGroup> GroupWeatherData(List<WeatherData> dailyForecasts)
+    {
+        try
+        {
+            var today = (int)DateTime.Now.DayOfWeek;
+            var groupedData = dailyForecasts
+                .GroupBy(w => w.RawDate.DayOfWeek)
+                .OrderBy(g => (int)g.Key >= today ? (int)g.Key - today : (int)g.Key + 7 - today)
+                .Select(g => new HourlyForecastGroup(
+                    g.Key.ToString(),
+                    g.Select(weatherData => new HourlyForecast
+                    {
+                        Hour = weatherData.RawDate.ToString("HH:mm"),
+                        Temperature = weatherData.Temperature,
+                        WeatherCondition = weatherData.WeatherCondition,
+                        Date = weatherData.RawDate
+                    }).ToList()))
+                .ToList();
 
-	private async Task LoadCountriesAsync()
-	{
-		Countries = await _apiService.GetCountriesAsync();
-	}
+            return groupedData;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error grouping weather data: {ex.Message}");
+            return new List<HourlyForecastGroup>();
+        }
+    }
 
-	private async Task LoadCitiesAsync(string countryCode)
-	{
-		var fetchedCities = await _apiService.GetCitiesByCountryAsync(countryCode);
-		Cities = fetchedCities;	
-	}
+    internal async Task InitializeWeatherForCurrentLocationAsync()
+    {
+        try
+        {
+            var location = await _apiService.GetCurrentLocationAsync();
+            if (location == null)
+            {
+                Console.WriteLine("Unable to determine location.");
+                return;
+            }
 
-	private async Task LoadWeatherDataAsync(string cityName)
-	{
-		WeatherData = await _apiService.GetWeatherDataAsync(cityName);
-		Temperature = $"{WeatherData.Temperature}°C";
-		CurrentCondition = WeatherData.WeatherCondition;
-		WeatherIconUrl = WeatherData.IconUrl;
+            var city = await _apiService.GetCityFromLocationAsync(location);
+            if (city == null)
+            {
+                Console.WriteLine("Unable to determine city from location.");
+                return;
+            }
 
-		var dailyForecasts = await _apiService.GetDailyForecastAsync(cityName);
-		GroupedDailyForecasts = new ObservableCollection<HourlyForecastGroup>(
-			GroupWeatherData(dailyForecasts)
-		);
-	}
-	
-	public List<HourlyForecastGroup> GroupWeatherData(List<WeatherData> dailyForecasts)
-	{
-		try
-		{
-			var today = (int)DateTime.Now.DayOfWeek;
-			var groupedData = dailyForecasts
-				.GroupBy(w => w.RawDate.DayOfWeek)
-				.OrderBy(g => (int)g.Key >= today ? (int)g.Key - today : (int)g.Key + 7 - today)
-				.Select(g => new HourlyForecastGroup(
-					g.Key.ToString(),
-					g.Select(weatherData => new HourlyForecast
-					{
-						Hour = weatherData.RawDate.ToString("HH:mm"),
-						Temperature = weatherData.Temperature,
-						WeatherCondition = weatherData.WeatherCondition,
-						Date = weatherData.RawDate
-					}).ToList()))
-				.ToList();
+            var country = Countries.FirstOrDefault(c => c.Code == city.CountryCode);
+            if (country != null)
+            {
+                SelectedCountry = country;
+                await LoadCitiesAsync(country.Code);
+            }
 
-			return groupedData;
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Error grouping weather data: {ex.Message}");
-			return new List<HourlyForecastGroup>();
-		}
-	}
-
-	internal async Task InitializeWeatherForCurrentLocationAsync()
-	{
-		try
-		{
-			var location = await _apiService.GetCurrentLocationAsync();
-			if (location == null)
-			{
-				Console.WriteLine("Unable to determine location.");
-				return;
-			}
-
-			var city = await _apiService.GetCityFromLocationAsync(location);
-			if (city == null)
-			{
-				Console.WriteLine("Unable to determine city from location.");
-				return;
-			}
-
-			var country = Countries.FirstOrDefault(c => c.Code == city.CountryCode);
-			if (country != null)
-			{
-				SelectedCountry = country;
-				await LoadCitiesAsync(country.Code);
-			}
-			
-			await Task.Delay(100);
-
-			if (Cities.Any(c => c.Name == city.Name))
-			{
-				SelectedCity = Cities.First(c => c.Name == city.Name);
-				await LoadWeatherDataAsync(SelectedCity.Name);
-			}
-			await LoadWeatherDataAsync(city.Name);
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"Error initializing weather for current location: {ex.Message}");
-		}
-	}
+            if (Cities.Any(c => c.Name == city.Name))
+            {
+                SelectedCity = Cities.First(c => c.Name == city.Name);
+                await LoadWeatherDataAsync(SelectedCity.Name);
+            }
+            else
+            {
+                await LoadWeatherDataAsync(city.Name);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing weather for current location: {ex.Message}");
+        }
+    }
 }

@@ -3,17 +3,13 @@
              xmlns:viewModels="clr-namespace:MauiProject.ViewModels"
              xmlns:converters="clr-namespace:MauiProject.Converters"
              x:Class="MauiProject.MainPage"
-             Title="Weather App">
+             Title="Weather Today">
 
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:NullToBooleanConverter x:Key="NullToBooleanConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
-
-    <ContentPage.BindingContext>
-        <viewModels:WeatherViewModel />
-    </ContentPage.BindingContext>
 
     <ScrollView Padding="20">
         <StackLayout Spacing="20" VerticalOptions="Start">

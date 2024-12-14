@@ -3,7 +3,6 @@
 using DotNet.Meteor.HotReload.Plugin;
 using MauiProject.Services;
 using MauiProject.ViewModels;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 public static class MauiProgram
@@ -17,8 +16,6 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
-
-        builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
         builder.Services.AddTransient<MainPage>();
 		builder.Services.AddSingleton<WeatherViewModel>();

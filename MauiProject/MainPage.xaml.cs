@@ -8,13 +8,4 @@ public partial class MainPage : ContentPage
 		BindingContext = vm;
 		InitializeComponent();
 	}
-
-	protected override async void OnAppearing()
-	{
-		base.OnAppearing();
-        if (BindingContext is WeatherViewModel viewModel)
-        {
-            await viewModel.InitializeWeatherForCurrentLocationAsync();
-        }
-    }
 }

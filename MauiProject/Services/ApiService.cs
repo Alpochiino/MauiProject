@@ -6,28 +6,25 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Globalization;
-using Microsoft.Extensions.Configuration;
 
 public class ApiService
 {
     private static readonly HttpClient _httpClient = new HttpClient();
-    private readonly string? _geoNamesUsername;
-    private readonly string? _geoNamesBaseUrl;
-    private readonly string? _openWeatherApiKey;
-    private readonly string? _openWeatherBaseUrl;
-	private readonly string? _openWeatherIconUrl;
-    private readonly string? _locationIQApiKey;
-    private readonly string? _locationIQBaseUrl;
 
-    public ApiService(IConfiguration configuration)
+    private string GetBaseUrl()
     {
-        _geoNamesUsername = configuration["ApiSettings:GeoNamesUsername"];
-        _geoNamesBaseUrl = configuration["ApiSettings:GeoNamesBaseUrl"];
-        _openWeatherApiKey = configuration["ApiSettings:OpenWeatherApiKey"];
-        _openWeatherBaseUrl = configuration["ApiSettings:OpenWeatherBaseUrl"];
-        _openWeatherIconUrl = configuration["ApiSettings:OpenWeatherIconUrl"];
-        _locationIQApiKey = configuration["ApiSettings:LocationIQApiKey"];
-        _locationIQBaseUrl = configuration["ApiSettings:LocationIQBaseUrl"];
+        string baseUrl = string.Empty;
+
+        if (DeviceInfo.Platform == DevicePlatform.Android)
+        {
+            baseUrl = "http://10.0.2.2:3000";
+        }
+        else if (DeviceInfo.Platform == DevicePlatform.iOS || DeviceInfo.Platform == DevicePlatform.MacCatalyst || DeviceInfo.Platform == DevicePlatform.WinUI)
+        {
+            baseUrl = "http://localhost:3000";
+        }
+
+        return baseUrl;
     }
 
     public async Task<List<Country>> GetCountriesAsync()
@@ -35,7 +32,8 @@ public class ApiService
 		var countries = new List<Country>();
 		try
 		{
-            var response = await _httpClient.GetStringAsync($"{_geoNamesBaseUrl}/countryInfoJSON?username={_geoNamesUsername}");
+            var baseUrl = GetBaseUrl();
+            var response = await _httpClient.GetStringAsync($"{baseUrl}/geonames/countryInfoJSON?username=Alpochiino");
             var countryData = JsonConvert.DeserializeObject<dynamic>(response);
 
 			foreach (var country in countryData.geonames)
@@ -47,7 +45,7 @@ public class ApiService
 				});
 			}
 		}
-		catch (Exception ex)
+        catch (Exception ex)
 		{
 			Console.WriteLine($"Error fetching countries: {ex.Message}");
 		}
@@ -59,7 +57,8 @@ public class ApiService
 		var cities = new List<City>();
 		try
 		{
-            var response = await _httpClient.GetStringAsync($"{_geoNamesBaseUrl}/searchJSON?country={countryCode}&maxRows=100&username={_geoNamesUsername}");
+            var baseUrl = GetBaseUrl();
+            var response = await _httpClient.GetStringAsync($"{baseUrl}/geonames/searchJSON?country={countryCode}&maxRows=100&username=Alpochiino");
             var cityData = JsonConvert.DeserializeObject<dynamic>(response);
 
 			foreach (var city in cityData.geonames)
@@ -84,7 +83,7 @@ public class ApiService
 		var weather = new WeatherData();
 		try
 		{
-            var weatherResponse = await _httpClient.GetStringAsync($"{_openWeatherBaseUrl}?q={cityName}&appid={_openWeatherApiKey}&units=metric");
+            var weatherResponse = await _httpClient.GetStringAsync($"https://api.openweathermap.org/data/2.5/forecast?q={cityName}&appid=47b00682e84fa9b2dc24565d4a3d431a&units=metric");
             var weatherJson = JsonConvert.DeserializeObject<dynamic>(weatherResponse);
 
 			weather.Temperature = weatherJson.list[0].main.temp;
@@ -92,7 +91,7 @@ public class ApiService
 			weather.WindSpeed = weatherJson.list[0].wind.speed;
 
 			string iconCode = weatherJson.list[0].weather[0].icon;
-			weather.IconUrl = $"{_openWeatherIconUrl}{iconCode}@2x.png";
+			weather.IconUrl = $"https://openweathermap.org/img/wn/{iconCode}@2x.png";
 		}
 		catch (Exception ex)
 		{
@@ -106,7 +105,7 @@ public class ApiService
 		var forecastList = new List<WeatherData>();
 		try
 		{
-            var forecastResponse = await _httpClient.GetStringAsync($"{_openWeatherBaseUrl}?q={cityName}&appid={_openWeatherApiKey}&units=metric");
+            var forecastResponse = await _httpClient.GetStringAsync($"https://api.openweathermap.org/data/2.5/forecast?q={cityName}&appid=47b00682e84fa9b2dc24565d4a3d431a&units=metric");
             var forecastJson = JsonConvert.DeserializeObject<dynamic>(forecastResponse);
 
 			if (forecastJson?.list != null && forecastJson.list.Count > 0)
@@ -121,7 +120,7 @@ public class ApiService
 						Date = rawDate.ToString("ddd, MMM dd, hh:mm tt", CultureInfo.InvariantCulture),
 						Temperature = entry.main.temp,
 						WeatherCondition = entry.weather[0].description,
-						IconUrl = $"{_openWeatherIconUrl}{entry.weather[0].icon}@2x.png"
+						IconUrl = $"https://openweathermap.org/img/wn/{entry.weather[0].icon}@2x.png"
 					});
 				}
 			}
@@ -165,7 +164,7 @@ public class ApiService
 			var latitude = location.Latitude.ToString("F6", CultureInfo.InvariantCulture);
 			var longitude = location.Longitude.ToString("F6", CultureInfo.InvariantCulture);
 
-            var response = await _httpClient.GetStringAsync($"{_locationIQBaseUrl}?key={_locationIQApiKey}&lat={latitude}&lon={longitude}&format=json");
+            var response = await _httpClient.GetStringAsync($"https://us1.locationiq.com/v1/reverse.php?key=pk.542b0e16be8de286956311ce5e738f5a&lat={latitude}&lon={longitude}&format=json");
             var data = JsonConvert.DeserializeObject<dynamic>(response);
 
 			if (data?.address == null)

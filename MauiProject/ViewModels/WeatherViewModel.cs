@@ -11,24 +11,23 @@ public partial class WeatherViewModel : BaseViewModel
 {
     private readonly ApiService _apiService;
 
-    [ObservableProperty]
-    private List<Country> countries = new List<Country>();
-    [ObservableProperty]
-    private List<City> cities = new List<City>();
-    [ObservableProperty]
-    private ObservableCollection<HourlyForecastGroup> groupedDailyForecasts = new ObservableCollection<HourlyForecastGroup>();
-    [ObservableProperty]
-    private WeatherData? weatherData;
-    [ObservableProperty]
-    private string? temperature;
-    [ObservableProperty]
-    private string? currentCondition;
-    [ObservableProperty]
-    private string? weatherIconUrl;
-    [ObservableProperty]
-    private City? selectedCity;
-    [ObservableProperty]
-    private Country? selectedCountry;
+    [ObservableProperty] private List<Country> countries = new List<Country>();
+
+    [ObservableProperty] private List<City> cities = new List<City>();
+
+    [ObservableProperty] private ObservableCollection<HourlyForecastGroup> groupedDailyForecasts = new ObservableCollection<HourlyForecastGroup>();
+
+    [ObservableProperty] private WeatherData? weatherData;
+
+    [ObservableProperty] private string? temperature;
+
+    [ObservableProperty] private string? currentCondition;
+
+    [ObservableProperty] private string? weatherIconUrl;
+
+    [ObservableProperty] private City? selectedCity;
+
+    [ObservableProperty] private Country? selectedCountry;
 
     public WeatherViewModel(ApiService apiService)
     {

@@ -10,69 +10,71 @@
             <converters:NullToBooleanConverter x:Key="NullToBooleanConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
-
-    <ScrollView Padding="20">
-        <StackLayout Spacing="20" VerticalOptions="StartAndExpand">
     
-            <Picker Title="Select a Country"
-                    ItemsSource="{Binding Countries}"
-                    ItemDisplayBinding="{Binding Name}"
-                    SelectedItem="{Binding SelectedCountry, Mode=TwoWay}"
-                    HorizontalOptions="FillAndExpand"
-                    VerticalOptions="Start"
-                    Margin="0,0,0,10" />
+    <RefreshView IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}">
+        <ScrollView Padding="20">
+            <StackLayout Spacing="20" VerticalOptions="StartAndExpand">
+                
+                <Picker Title="Select a Country"
+                        ItemsSource="{Binding Countries}"
+                        ItemDisplayBinding="{Binding Name}"
+                        SelectedItem="{Binding SelectedCountry, Mode=TwoWay}"
+                        HorizontalOptions="FillAndExpand"
+                        VerticalOptions="Start"
+                        Margin="0,0,0,10" />
 
-            <Picker Title="Select a City"
-                    ItemsSource="{Binding Cities}"
-                    ItemDisplayBinding="{Binding Name}"
-                    SelectedItem="{Binding SelectedCity, Mode=TwoWay}"
-                    IsVisible="{Binding SelectedCountry, Converter={StaticResource NullToBooleanConverter}}"
-                    HorizontalOptions="FillAndExpand"
-                    VerticalOptions="Start"
-                    Margin="0,0,0,20"/>
+                <Picker Title="Select a City"
+                        ItemsSource="{Binding Cities}"
+                        ItemDisplayBinding="{Binding Name}"
+                        SelectedItem="{Binding SelectedCity, Mode=TwoWay}"
+                        IsVisible="{Binding SelectedCountry, Converter={StaticResource NullToBooleanConverter}}"
+                        HorizontalOptions="FillAndExpand"
+                        VerticalOptions="Start"
+                        Margin="0,0,0,20"/>
 
-            <StackLayout IsVisible="{Binding SelectedCity, Converter={StaticResource NullToBooleanConverter}}">
-                <Frame BackgroundColor="DimGray" CornerRadius="20" Padding="10" Margin="10,20,0,0" HasShadow="True" MinimumWidthRequest="200">
-                    <StackLayout>
-                        <Label Text="Today" FontSize="22" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White"/>
-                        <Image Source="{Binding WeatherData.IconUrl}" WidthRequest="80" HeightRequest="80" HorizontalOptions="Center" Aspect="AspectFit" />
-                        <Label Text="{Binding WeatherData.Temperature, StringFormat='{0}°C'}" FontSize="60" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White"/>
-                        <Label Text="{Binding WeatherData.WeatherCondition}" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White"/>
-                        <Label Text="{Binding WeatherData.WindSpeed, StringFormat='Wind: {0} km/h'}" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White"/>
-                    </StackLayout>
-                </Frame>
+                <StackLayout IsVisible="{Binding SelectedCity, Converter={StaticResource NullToBooleanConverter}}">
+                    <Frame BackgroundColor="DimGray" CornerRadius="20" Padding="10" Margin="10,20,0,0" HasShadow="True" MinimumWidthRequest="200">
+                        <StackLayout>
+                            <Label Text="Today" FontSize="22" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White"/>
+                            <Image Source="{Binding WeatherData.IconUrl}" WidthRequest="80" HeightRequest="80" HorizontalOptions="Center" Aspect="AspectFit" />
+                            <Label Text="{Binding WeatherData.Temperature, StringFormat='{0}°C'}" FontSize="60" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White"/>
+                            <Label Text="{Binding WeatherData.WeatherCondition}" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White"/>
+                            <Label Text="{Binding WeatherData.WindSpeed, StringFormat='Wind: {0} km/h'}" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White"/>
+                        </StackLayout>
+                    </Frame>
 
-                <Grid HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
+                    <Grid HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
 
-                    <Label Grid.Row="0" Text="DAILY FORECAST" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,20,0,0" />
-                    <CollectionView Grid.Row="1" ItemsSource="{Binding GroupedDailyForecasts}" ItemsLayout="VerticalList" HorizontalOptions="CenterAndExpand" VerticalOptions="FillAndExpand" MinimumWidthRequest="420" Margin="10">
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate>
-                                <StackLayout Spacing="5" Padding="5" HorizontalOptions="CenterAndExpand">
-                                    <Label Text="{Binding Key}" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,5,0,0" />
-                                    <CollectionView ItemsSource="{Binding Items}" ItemsLayout="HorizontalList" HorizontalScrollBarVisibility="Never" HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand" HeightRequest="100">
-                                        <CollectionView.ItemTemplate>
-                                            <DataTemplate>
-                                                <Frame BackgroundColor="Gray" Padding="8" Margin="2" CornerRadius="10" HeightRequest="90" WidthRequest="100">
-                                                    <StackLayout Spacing="3">
-                                                        <Label Text="{Binding Hour}" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White" />
-                                                        <Label Text="{Binding Temperature, StringFormat='{0}°C'}" FontSize="14" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White" />
-                                                        <Label Text="{Binding WeatherCondition}" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White" HorizontalTextAlignment="Center" />
-                                                    </StackLayout>
-                                                </Frame>
-                                            </DataTemplate>
-                                        </CollectionView.ItemTemplate>
-                                    </CollectionView>
-                                </StackLayout>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
-                </Grid>
+                        <Label Grid.Row="0" Text="DAILY FORECAST" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,20,0,0" />
+                        <CollectionView Grid.Row="1" ItemsSource="{Binding GroupedDailyForecasts}" ItemsLayout="VerticalList" HorizontalOptions="CenterAndExpand" VerticalOptions="FillAndExpand" MinimumWidthRequest="420" Margin="10">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackLayout Spacing="5" Padding="5" HorizontalOptions="CenterAndExpand">
+                                        <Label Text="{Binding Key}" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" Margin="0,5,0,0" />
+                                        <CollectionView ItemsSource="{Binding Items}" ItemsLayout="HorizontalList" HorizontalScrollBarVisibility="Never" HorizontalOptions="CenterAndExpand" VerticalOptions="CenterAndExpand" HeightRequest="100">
+                                            <CollectionView.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Frame BackgroundColor="Gray" Padding="8" Margin="2" CornerRadius="10" HeightRequest="90" WidthRequest="100">
+                                                        <StackLayout Spacing="3">
+                                                            <Label Text="{Binding Hour}" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White" />
+                                                            <Label Text="{Binding Temperature, StringFormat='{0}°C'}" FontSize="14" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White" />
+                                                            <Label Text="{Binding WeatherCondition}" FontSize="12" FontAttributes="Bold" HorizontalOptions="Center" TextColor="White" HorizontalTextAlignment="Center" />
+                                                        </StackLayout>
+                                                    </Frame>
+                                                </DataTemplate>
+                                            </CollectionView.ItemTemplate>
+                                        </CollectionView>
+                                    </StackLayout>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Grid>
+                </StackLayout>
             </StackLayout>
-        </StackLayout>
-    </ScrollView>
+        </ScrollView>
+    </RefreshView>  
 </ContentPage>
